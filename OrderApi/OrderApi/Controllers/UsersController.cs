@@ -20,6 +20,52 @@ namespace OrderApi.Controllers
             _userRepository = userRepository;
         }
 
+        [HttpDelete("/{id}")]
+        public async Task<ActionResult<Result>> DeleteUser(Guid id)
+        {
+            Guid traceId = Guid.NewGuid();
+            try
+            {
+                if (await _userRepository.Exists(id))
+                {
+                    await _userRepository.DeleteAsync(id);
+                    return Ok(new Result());
+                }
+                else
+                {
+                    return NotFound(new EntityResult<User>($"User with id {id} does not exists", traceId));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"trace: {traceId} message: {ex.Message}");
+                return StatusCode(500, new EntityListResult<User>("Please contact your system administrator", traceId));
+            }
+        }
+
+        [HttpGet("/{id}")]
+        public async Task<ActionResult<EntityResult<User>>> GetUser(Guid id)
+        {
+            Guid traceId = Guid.NewGuid();
+            try
+            {
+                if (await _userRepository.Exists(id))
+                {
+                    User user = await _userRepository.GetAsync(id);
+                    return Ok(new EntityResult<User>(user));
+                }
+                else
+                {
+                    return NotFound(new EntityResult<User>($"User with id {id} does not exists", traceId));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"trace: {traceId} message: {ex.Message}");
+                return StatusCode(500, new EntityListResult<User>("Please contact your system administrator", traceId));
+            }
+        }
+
         [HttpPut]
         public async Task<ActionResult<EntityResult<User>>> UpdateUser([FromBody] User user)
         {
@@ -53,7 +99,7 @@ namespace OrderApi.Controllers
                 if (!await _userRepository.UserNameExistsAsync(createUserRequest.UserName))
                 {
                     User newUser = await _userRepository.CreateAsync(new(createUserRequest));
-                    return Ok(new EntityResult<User>(newUser));
+                    return Created($"/users/{newUser.Id}",new EntityResult<User>(newUser));
                 }
                 else
                 {
