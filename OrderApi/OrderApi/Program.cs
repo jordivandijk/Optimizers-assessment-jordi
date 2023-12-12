@@ -1,11 +1,15 @@
 using OrderApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.SqlServer;
+using OrderApi.Repositories.Interfaces;
+using OrderApi.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSqlServer<OptimizersDbContext>(builder.Configuration.GetConnectionString("SqlServer01"));
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
